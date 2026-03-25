@@ -1,12 +1,13 @@
 const BASE_URL = "https://trendmapper.onrender.com";
 
+let totalChart, eventChart, productChart;
+
 // TRACK EVENT
 async function track(type, productId) {
   await fetch(`${BASE_URL}/track`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
-      user_id: "user1",
       event_type: type,
       product_id: productId
     })
@@ -31,26 +32,20 @@ async function loadData() {
     products[e.product_id] = (products[e.product_id] || 0) + 1;
   });
 
-  // TOTAL CHART
-  new Chart(document.getElementById("totalChart"), {
+  if (totalChart) totalChart.destroy();
+  totalChart = new Chart(document.getElementById("totalChart"), {
     type: "bar",
-    data: {
-      labels:["Total"],
-      datasets:[{ data:[total] }]
-    }
+    data: { labels:["Total"], datasets:[{ data:[total] }] }
   });
 
-  // EVENT CHART
-  new Chart(document.getElementById("eventChart"), {
+  if (eventChart) eventChart.destroy();
+  eventChart = new Chart(document.getElementById("eventChart"), {
     type: "pie",
-    data: {
-      labels:["View","Cart"],
-      datasets:[{ data:[view,cart] }]
-    }
+    data: { labels:["View","Cart"], datasets:[{ data:[view,cart] }] }
   });
 
-  // PRODUCT CHART
-  new Chart(document.getElementById("productChart"), {
+  if (productChart) productChart.destroy();
+  productChart = new Chart(document.getElementById("productChart"), {
     type: "bar",
     data: {
       labels:Object.keys(products),
@@ -61,21 +56,22 @@ async function loadData() {
   generateAI(data);
 }
 
-// AI FUNCTION
+// AI INSIGHT
 function generateAI(data) {
-  let productCount = {};
+  if (data.length === 0) {
+    document.getElementById("aiOutput").innerHTML = "No data yet";
+    return;
+  }
 
+  let count = {};
   data.forEach(e => {
-    productCount[e.product_id] = (productCount[e.product_id] || 0) + 1;
+    count[e.product_id] = (count[e.product_id] || 0) + 1;
   });
 
-  let topProduct = Object.keys(productCount).reduce((a, b) =>
-    productCount[a] > productCount[b] ? a : b
-  );
+  let top = Object.keys(count).reduce((a,b)=> count[a]>count[b]?a:b);
 
   document.getElementById("aiOutput").innerHTML =
-    `🔥 Most Popular Product: ${topProduct} <br> 💡 Promote this product more!`;
+    `🔥 Most Popular Product: ${top}`;
 }
 
-// LOAD ON START
 window.onload = loadData;
